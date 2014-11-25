@@ -10,6 +10,29 @@ A bare-bones PHP web framework.
 * Dependency injection
 
 ## Getting started
+
+Download and install `composer`.
+
+```sh
+curl -sS https://getcomposer.org/installer | php
+```
+
+`require` `maxvu/skeletal` at `~1.0` in your `composer.json`.
+
+```json
+{
+  "require" : {
+    "maxvu/skeletal" : "~1.0"
+  }
+}
+```
+
+Install
+
+```
+php composer.phar install
+```
+
 Take advantage of skeletal's router by rewriting all incoming requests to a common entry point. If that's an `index.php`, give Apache/httpd a directive like this in an `.htaccess` file:
 
 ```
