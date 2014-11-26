@@ -118,7 +118,7 @@ Assign arbitrary properties to the service and they will become available in the
   $forum->db = new DatabaseClass();
   
   $demo->router()->get( '/post/{id}', function ( $rq, &$rs ) {
-    $post = $forum->db->getPost( $rq->get('id') );
+    $post = this->db->getPost( $rq->get('id')->asA('post-id') );
     $rs->apply( 'viewpost.php' );
   });
 ```
