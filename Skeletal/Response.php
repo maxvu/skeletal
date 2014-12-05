@@ -32,20 +32,28 @@
       return $this;
     }
     
-    public function body ( $what ) {
+    public function body ( $str ) {
      $this->body = "";
-     return $this->apply( $what );
+     return $this->apply( $str );
     }
     
-    public function apply ( $what ) {
-      if ( is_readable( $what ) ) {
+    public function apply ( $file ) {
+      if ( is_readable( $file ) ) {
         ob_start();
-        require( $what );
+        require( $file );
         $this->body .= ob_get_clean();
       } else {
-        $this->body .= $what;
+        $this->body .= $file;
       }
       return $this;
+    }
+    
+    public function usePartial ( $file ) {
+      if ( !is_readable( $file ) )
+        throw new Exception ( "Partial $file inaccessable." );
+      ob_start();
+      @include( $file );
+      return ob_get_clean();
     }
     
     /*
