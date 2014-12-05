@@ -11,6 +11,7 @@
   
     public function __construct ( ) {
       $this->router = new Router();
+      $this->router->bindContext( $this );
       $this->session = new Session();
     }
     

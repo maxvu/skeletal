@@ -31,6 +31,7 @@
       $this->badRouteAction = function ( $req, &$rsp ) {
         $rsp->body('Bad route definition.')->code(500);
       };
+      $this->context = NULL;
     }
     
     private function addRoute ( $method, $uri, $handler ) {
@@ -42,6 +43,10 @@
         'route' => new Route( $uri ),
         'handler' => $handler
       );
+    }
+    
+    public function bindContext ( &$context ) {
+      $this->context = $context;
     }
     
     /*
@@ -84,6 +89,8 @@
     private function invokeHandler ( $handler, $req ) {
       $respRef = new Response();
       $tk = null;
+      if ( $this->context != null )
+        $handler = $handler->bindTo( $this->context );
       
       $respRet = $handler( $req, $respRef );
       if ( is_a( $respRet, 'Response' ) )
