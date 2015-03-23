@@ -1,6 +1,6 @@
 <?php
   
-  namespace Skeletal;
+  namespace Skeletal\Session;
   
   class Session {
 

@@ -1,6 +1,7 @@
 <?php
 
-  namespace Skeletal;
+  namespace Skeletal\HTTP;
+  use \Skeletal\Router\Path as Path;
 
   class Request {
   
@@ -70,22 +71,19 @@
     public function get ( $key ) {
       return 
         !empty( $this->queryString ) && isset( $this->queryString[$key] ) ?
-          new Parameter( $this->queryString[$key] ) : 
-          new Parameter( '' );
+          $this->queryString[$key] : NULL;
     }
     
     public function post ( $key ) {
       return 
         !empty( $this->postData ) && isset( $this->postData[$key] ) ?
-          new Parameter( $this->postData[$key] ) :
-          new Parameter( '' );
+          $this->postData[$key] : NULL;
     }
     
     public function header ( $h ) {
       return
-        !empty( $this->headersData[$h] ) && isset( $this->headersData[$h] )
-          ? $this->headersData[$h] : 
-          new Parameter( '' );
+        !empty( $this->headersData[$h] ) && isset( $this->headersData[$h] ) ?
+          $this->headersData[$h] : NULL;
     }
     
     public function files () { return $this->filesData; }
@@ -114,7 +112,8 @@
       'HTTP_USER_AGENT' => 'User-Agent',
       'HTTP_DNT' => 'DNT',
       'HTTP_ACCEPT_ENCODING' => 'Accept-Encoding',
-      'HTTP_ACCEPT_LANGUAGE' => 'Accept-Language'
+      'HTTP_ACCEPT_LANGUAGE' => 'Accept-Language',
+      'HTTP_REFERER' => 'Referer'
     );
   
   };
