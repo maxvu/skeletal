@@ -1,5 +1,7 @@
 <?php
 
+  namespace Skeletal\Tests\Router;
+
   use Skeletal\Router\Router;
 
   class RouterTest extends \Sliver\TestSuite\TestSuite {

@@ -1,5 +1,7 @@
 <?php
 
+  namespace Skeletal\Tests\HTTP;
+
   use Skeletal\HTTP\Response;
 
   class ResponseTest extends \Sliver\TestSuite\TestSuite {
@@ -27,10 +29,23 @@
     }
     
     public function json () {
-      $this->assert( (new Response())->json( 1 )->body() )->eq( '1' );
-      $this->assert( (new Response())->json( 1 )->headers() )->hasKey( 'Content-type' );
-      $this->assert( (new Response())->json( [ "one" => 1 ] )->body() )->eq( '{"one":1}' );
-      $this->assert( (new Response())->json( '{"one":1}' )->body() )->eq( '{"one":1}' );
+      
+      $this->assert(
+        (new Response())->json( 1 )->body()
+      )->eq( '1' );
+      
+      $this->assert(
+        (new Response())->json( 1 )->headers()
+      )->hasKey( 'Content-type' );
+      
+      $this->assert(
+        (new Response())->json( [ "one" => 1 ] )->body()
+      )->eq( '{"one":1}' );
+      
+      $this->assert(
+        (new Response())->json( '{"one":1}' )->body()
+      )->eq( '{"one":1}' );
+      
     }
     
     public function dataStaging () {

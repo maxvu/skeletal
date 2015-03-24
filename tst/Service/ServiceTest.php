@@ -1,5 +1,7 @@
 <?php
 
+  namespace Skeletal\Tests\Service;
+
   use Skeletal\Service\Service;
   use Skeletal\Session\CLISession;
   use Skeletal\HTTP\Request as Request;

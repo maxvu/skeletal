@@ -1,5 +1,7 @@
 <?php
 
+  namespace Skeletal\Tests\Router;
+
   use Skeletal\Router\Route;
   use Skeletal\Router\RouteToken;
 
