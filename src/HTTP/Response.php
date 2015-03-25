@@ -38,14 +38,24 @@
       return $this->apply( $str );
     }
     
-    public function apply ( $res ) {
-      if ( is_readable( $res ) ) {
-        ob_start();
-        require( $res );
-        $this->body .= ob_get_clean();
-      } else {
-        $this->body .= $res;
-      }
+    public function append ( $str ) {
+      if ( is_readable( $str ) )
+        $this->includeFile( $str );
+      else
+        $this->body .= strval( $str );
+      return $this;
+    }
+    
+    public function apply ( $str ) {
+      return $this->append( $str );
+    }
+    
+    private function includeFile ( $res ) {
+      if ( !is_readable( $res ) )
+        throw new \Exception( "Include $res inaccessible.");      
+      ob_start();
+      require( $res );
+      $this->body .= ob_get_clean();
       return $this;
     }
     
