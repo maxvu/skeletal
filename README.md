@@ -2,20 +2,12 @@
 
 A bare-bones PHP web framework. 
 
-## Main features
+### Main features
 
 * A router with basic pattern matching
-* Abstracted Request/Response classes
-* Input filtering/validation
-* Dependency injection
+* Easy, abbreviated Request and Response classes
 
-## Getting started
-
-Download and install `composer`.
-
-```sh
-curl -sS https://getcomposer.org/installer | php
-```
+### Getting started
 
 `require` `maxvu/skeletal` at `~1.0` in your `composer.json`.
 
@@ -27,11 +19,7 @@ curl -sS https://getcomposer.org/installer | php
 }
 ```
 
-Install
-
-```
-php composer.phar install
-```
+#### Installation
 
 Take advantage of skeletal's router by rewriting all incoming requests to a common entry point. If that's an `index.php`, give Apache/httpd a directive like this in an `.htaccess` file:
 
@@ -48,14 +36,17 @@ location / {
 }
 ```
 
+#### A basic service example
+
 Copy the following boilerplate into your entry point and verify that it's working properly by seeing a plain HTML page with an HTTP response code 200:
 
 ```php
 <?php
-  require 'autoload.php';
-  $demoService = new \Skeletal\Service();
+  require 'vendor/autoload.php';
   
-  $demoService->router()->get( '/', function ( $rq, &$rs ) {
+  $demoService = new \Skeletal\Service\Service();
+  
+  $demoService->get( '/', function ( $rq, &$rs ) {
     $rs->body('<h1>HELLO WORLD</h1>');
   });
   
@@ -63,51 +54,87 @@ Copy the following boilerplate into your entry point and verify that it's workin
 ?>
 ```
 
-## Usage
+The `Service` accepts route definitions as method calls named after the desired HTTP verb, and is given both a path and a closure to perform when matched. A `Request` will be provided to the closure as the first argument and a `Response` object by-reference as the second. Craft your response by calling `Response`'s vocabulary of chainable methods. The return value is not recognized.
 
-### Routing
-Use the service's `->router()->get()`, `->router()->post()`, etc. methods to define routes for your application. Each of these methods accepts a string identifying a path to match to and callback function to invoke upon request. The path should take the general form `/A/B/C` and any named parameters that should be parsed out of the path should be marked with curly braces (e.g. `/post/{id}`). The callback function should have the form `function ( $request, &$response )`.
+Direct `Service` to route the current request and echo the appropriate response with `serve()`.
 
-### Getting information from the Request
+### Usage
 
-Access `_GET` and `_POST` variables:
+#### Getting information from the Request
+
+Access query string and post body parameters (`_GET` and `_POST`) with the `->get( $key )` and `->post( $key )` methods.
+
 ```php
-  $demoBlog->router()->get( '/search', function ( $rq, &$rs ) {
-    $mySearchEngine->search( $rq->get('q') );
+  $demoBlog->get( '/search', function ( $rq, &$rs ) {
+    $searchResult = $mySearchEngine->search( $rq->get('q') );
+    $rq->body( sizeof( $searchResult ) . ' records found' );
   });
 ```
 
 ```php
-  $demoMail->router()->post( '/message', function ( $rq, &$rs ) {
+  $demoMail->post( '/message', function ( $rq, &$rs ) {
     $to = $rq->post('to');
     $msg = $rq->post('msg');
     $mailer->send( $to, $msg );
   });
 ```
 
-### Input filtering
+Methods to access the `Request`:
 
-Use the `->isA( $what )` and `->isAn( $what )` functions to return a filtered version of user input, where `$what` is the name of the filter to apply (`int`, `bool`, `slug` and `email` are included). A filter will take the argument and transform it into a usable type or return `NULL` on failure.
-
-```php
-  $demoNewsletter->router()->post( '/subscribe', function ( $rq, &$rs ) {
-    if ( ($email = $rq->post('email')->asAn('email')) != NULL ) {
-        $rs->apply('welcome.php');   
-    } else {
-        $rq->body("That's not a valid e-mail address!");
-    }
-  });
+```
+  path()              the request path 
+  get( $key )         access query string parameter (or route matcher) $key
+  post( $key )        access post parameter $key 
+  header( $hName )    access value for the HTTP header $hName (if accessible by PHP)
+  files()             access PHP $_FILES superglobal
+  method()            HTTP request method ('GET', 'POST', etc.)
+  ip()                remote host (as reported by PHP)
+  ssl()               whether this request was sent over SSL (as reported by PHP)
 ```
 
-Define your own filters using `Service`'s `defineFilter( $name, $callback )` function, where `$callback` accepts one string argument to transform and returns the filtered value.
 
-```php
-    $demoBitcoinService->defineFilter( 'bitcoin-address', function ( $x ) {
-        if ( is_string( $x ) && !preg_match("/^[^O0Il]{26,33}$/") )
-            return $x;
-        return NULL;
-    });
+#### Manipulating the Response
+
+The `Response` argument is given as the second argument by-reference. By default, it will be sent as a `text/html` document with an empty body and code `200 OK`. Modify the body, headers and response code using any of its chainable methods:
+
 ```
+  # CODES
+  code( $code )              change the HTTP response code (status will match)
+  redirect( $to )            set code 301, 'Location: $to'
+  badRequest()               set code 400
+  unauthorized()             set code 401
+  forbidden()                set code 403
+  notFound()                 set code 404
+  notAcceptable()            set code 406
+  unavailable()              set code 503
+  serverError()              set code 500
+  
+  # BODY
+  body( $str )               replace the body's content with $str
+  apply( $str )              append string to body
+  apply( $file )             include() file and append its (evaluated) contents to body
+  
+  # HEADERS
+  header( $name )            get the value of header $name
+  header( $name, $val )      set header $name to $val
+  headers()                  get an array of all headers set
+  cache( $secs )             set 'Cache-Control' header to 'max-age=$secs'
+  language( $lang )          set 'Content-Language' to $lang
+  type( $type, $charset )    set 'Content-Type' to '$type; charset=$charset'
+  length( $nBytes )          set 'Content-Length' to $nBytes
+  
+  html( $html )              set body to file or string $html and set 'Content-Type' to 'text/html'
+  json( $msg )               set body to encodable string or file and 'Content-Type' to 'application/json'
+  text( $txt )               set body to file or string $txt and 'Content-Type' to text/plain'
+  js( $js )                  set body to file or string $js and 'Content-Type' to 'application/javascript'
+  css( $css )                set body to file or string $css and 'Content-Type' to 'text/css'
+  download( $data, $name )   set body to file or string $data and 'Content-Disposition' to 'attachment; filename=$name'
+    
+  
+```
+
+### Routing
+Call HTTP-verb methods on the `Service` to start a route declaration. Provide it a path to match and a closure to perform when it's accessed. The path will match case-insensitive and recognizes parameters in the form of `{token}` (e.g. `/post/{id}`), which will be available as query string parameters (`get()`) in the `Response`. The callback should have the form `function ( $request, &$response )`.
 
 ### Dependency injection
 
@@ -115,17 +142,17 @@ Assign arbitrary properties to the service and they will become available in the
 
 ```php
   $forum = new Skeletal\Service();
-  $forum->db = new DatabaseClass();
+  $forum->db = new Database();
   
-  $demo->router()->get( '/post/{id}', function ( $rq, &$rs ) {
-    $post = this->db->getPost( $rq->get('id')->asA('post-id') );
+  $demo->get( '/post/{id}', function ( $rq, &$rs ) {
+    $post = this->db->getPost( $rq->get('id') );
     $rs->apply( 'viewpost.php' );
   });
 ```
 
 ### Accessing the Session
 
-Get and set arbitrary properties on `Service`'s `$session`. 
+`Service`'s `$session` is available on instantiation and will alias PHP's `$_SESSION`.
 
 ```php
   $demoLogin->router()->post( '/login', function ( $rq, &$rs ) {
@@ -134,65 +161,4 @@ Get and set arbitrary properties on `Service`'s `$session`.
   });
 ```
 
-By default, `Service`'s public member `$session` is a flat wrapper for accessing `$_SESSION`. Replace it or use it conjunction with other with another dependencies to customize.
 
-
-### Manipulating the Response
-A reference to a newly-instantiated Response is provided as the second argument and will be returned to the router after the callback. (This way, you don't have to `new` and `return` yourself.) It defaults to an empty `text/html` document.
-
-Add to the body string with `apply()` or replace it with `body()`. Use the content itself or give the name of a file to `include()`. Any definitions or variables in included files will be available in the callback.
-
-```php
-  $demoLogin->router()->post( '/secretpage', function ( $rq, &$rs ) {
-    if ( isset( $this->session->user ) ) {
-        $rs->body( 'user_portal.php' );
-        $rs->apply( "Welcome back, {$user->name}!" );
-    } else
-        $rs->apply( 'BEAT IT, PUNK!' );
-  });
-```
-
-Use `code( $num )` and `header( $name, $val )` to modify the response directly, or use a number of shorthand functions for common types of responses.
-
-Redirection
-```php
-$demoSite->router()->post( '/oldpage', function ( $rq, &$rs ) {
-    $rs->redirect( '/newpage' ); // code(301), header( 'Location', '/newpage' )
-});
-```
-Serving JSON
-```php
-$demoAPI->router()->post( '/user/{id}', function ( $rq, &$rs ) {
-    $rs->json( Users::find($id)->getInfo() ); // type( 'application/json' ), body ( ... )
-});
-```
-Serving stylesheets
-```php
-$demoAPI->router()->post( '/style.css', function ( $rq, &$rs ) {
-    $rs->css( '/public/master.css' ); // type( 'text/css' ), apply ( ... )
-});
-```
-
-#### Chaining
-
-All Response methods are chainable, so you may do things like `$rq->cache(604800)->css('style.css')`.
-
-#### Available functions
-
-* Headers
-    * `header( $name, $value )` sets an arbirtrary header. Equivalent to `header( "$name: $value" )`.
-    * `cache( $secs )` sets `Cache-control`, takes time in seconds.
-    * `language( $lang = 'en' )` sets `Content-Language`.
-    * `type( $type, $charset = 'utf-8' )` sets `Content-Type`.
-* Codes
-    * `redirect( $newPath )`
-    * `notFound()`, 404
-    * `unavailable()`, 503
-    * `serverError( $msg = '' )`, 500
-* Content-types
-    * `html( $html )`
-    * `json( $json )`
-    * `text( $txt )`
-    * `js( $js )`
-    * `css( $css )`
-    * `download( $data, $name )` prompts browser to download file.
