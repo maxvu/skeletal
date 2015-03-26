@@ -13,17 +13,37 @@
   
     protected $router;
     protected $session;
+
+    protected $onException;   // ( $req, &$rsp, $ex )
+    protected $onNotFound;    // ( $req, &$rsp )
     
     public function __construct () {
       $this->router = new \Skeletal\Router\Router();
       $this->session = new Session();
+      
       $this->onNotFound = function ( $req, &$resp ) {
         $resp->badRequest()->text( '404 - Not Found' )->code(404);
       };
-      $this->onException = function ( $req, &$resp, \Exception $e ) {
+      $this->onException = function ( $req, &$resp, $ex ) {
         print_r( $e );
         $resp->serverError()->text( '500 - Server Error' )->code(500);
       };
+    }
+    
+    /*
+      Register these two events.
+    */
+    
+    public function onNotFound ( $callback ) {
+      if ( !is_callable( $callback ) )
+        throw new \InvalidArgumentException( "onNotFound: not a valid callback" );
+      $this->onNotFound = $callback;
+    }
+    
+    public function onException ( $callback ) {
+      if ( !is_callable( $callback ) )
+        throw new \InvalidArgumentException( "onException: not a valid callback" );
+      $this->onException = $callback;
     }
     
     /*
@@ -53,13 +73,12 @@
     
     public function __call ( $method, $args ) {
       $is_http_method = in_array( strtoupper( $method ), Method::ALL() );
-        if ( $is_http_method ) { 
-          if ( sizeof( $args ) === 2 ) {
-          $this->router->addRoute( new Path( $args[0] ), strtoupper( $method ), $args[1] );
-        }
-      } else {
+      if ( $is_http_method && sizeof( $args ) === 2 )
+        $this->router->addRoute(
+          new Path( $args[0] ), strtoupper( $method ), $args[1]
+        );
+      else
         throw new \InvalidArgumentException( "No method $method" );
-      }
     }
     
     /*
@@ -74,8 +93,10 @@
       
       // Found the right path
       if ( $route !== NULL ) {
-        $pathVars = $route->apply( $request->requestPath );
-        $request->queryString = array_merge( $pathVars, $request->queryString );
+        $request->queryString = array_merge(
+          $route->apply( $request->requestPath ),
+          $request->queryString
+        );
         return $this->invokeCallback( $request, $route->getClosure() );
       }
       
@@ -87,7 +108,6 @@
           $request->requestMethod = Method::$GET;
           $response = $this->route( $request );
           $request->requestMethod = Method::$HEAD;
-          $response->contentLength( strlen( $response->body() ) );
           return $response->body('');
         }
       }
@@ -108,13 +128,10 @@
     private function invokeCallback ( Request $request, $handler ) {
       $response = new Response();
       $handler = $handler->bindTo( $this );
-      try {
+      try
         call_user_func_array( $handler, array( $request, &$response ) );
-      } catch ( \Exception $ex ) {
-        $args = array( $request, &$response, $ex );
-        call_user_func_array( $this->onException, $args );
-      }
-      $response->contentLength( strlen( $response->body() ) );
+      catch ( \Exception $ex )
+        call_user_func_array( $this->onException, [ $request, &$response, $ex ] );
       return $response;
     }
   

@@ -161,4 +161,8 @@ Assign arbitrary properties to the service and they will become available in the
   });
 ```
 
+### Handling errors
+
+Use the `Service`'s `onNotFound( $callback )` and `onException( $callback )` methods to define how error responses should be handled. They should have the same signature as normal requests and will be called on events as their names suggest: `onNotFound` when a request path doesn't match any defined route and `onException` when any `Exception` is caught during a callback (including `onNotFound`).
+
 
