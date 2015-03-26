@@ -32,10 +32,9 @@
     }
     
     public function body ( $str = NULL ) {
-      if ( $str === NULL )
-        return $this->body;
+      if ( $str === NULL ) return $this->body;
       $this->body = "";
-      return $this->apply( $str );
+      return $this->append( $str );
     }
     
     public function append ( $str ) {
@@ -43,11 +42,8 @@
         $this->includeFile( $str );
       else
         $this->body .= strval( $str );
+      $this->length( strlen( $this->body ) );
       return $this;
-    }
-    
-    public function apply ( $str ) {
-      return $this->append( $str );
     }
     
     private function includeFile ( $res ) {
@@ -55,7 +51,7 @@
         throw new \Exception( "Include $res inaccessible.");      
       ob_start();
       require( $res );
-      $this->body .= ob_get_clean();
+      $this->append( ob_get_clean() );
       return $this;
     }
     
@@ -97,7 +93,7 @@
       return $this;
     }
     
-    public function contentLength ( $nBytes ) {
+    public function length ( $nBytes ) {
       $this->headers['Content-Length'] = $nBytes;
       return $this;
     }
@@ -129,7 +125,7 @@
     }
     
     public function notAcceptable () {
-      return $this->code( 404 );
+      return $this->code( 406 );
     }
     
     public function unavailable () {
