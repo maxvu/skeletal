@@ -127,10 +127,11 @@
     private function invokeCallback ( Request $request, $handler ) {
       $response = new Response();
       $handler = $handler->bindTo( $this );
-      try
+      try {
         call_user_func_array( $handler, array( $request, &$response ) );
-      catch ( \Exception $ex )
+      } catch ( \Exception $ex ) {
         call_user_func_array( $this->onException, [ $request, &$response, $ex ] );
+      }
       return $response;
     }
   
