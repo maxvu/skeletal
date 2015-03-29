@@ -100,8 +100,7 @@
         return $this->invokeCallback( $request, $route->getClosure() );
       }
       
-      // HEAD wasn't explicitly defined, but route to matching GET, set the 
-      // appropriate 'Content-Length' and strip body.
+      // HEAD wasn't explicitly defined, but route to matching GET, strip body.
       if ( $request->method() === Method::$HEAD ) {
         $route = $this->router->findRoute( $request->path(), Method::$GET );
         if ( $route !== NULL ) {
