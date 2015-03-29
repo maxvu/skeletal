@@ -46,6 +46,10 @@
       return $this;
     }
     
+    public function apply ( $str ) {
+      return $this->append( $str );
+    }
+    
     private function includeFile ( $res ) {
       if ( !is_readable( $res ) )
         throw new \Exception( "Include $res inaccessible.");      
