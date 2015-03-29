@@ -1,13 +1,14 @@
-# skeletal
+## skeletal
 
 A bare-bones PHP web framework. 
 
-### Main features
+#### Main features
 
 * A router with basic pattern matching
 * Easy, abbreviated Request and Response classes
+* Basic error handling
 
-### Getting started
+#### Getting started
 
 `require` `maxvu/skeletal` at `~1.0` in your `composer.json`.
 
@@ -18,8 +19,6 @@ A bare-bones PHP web framework.
   }
 }
 ```
-
-#### Installation
 
 Take advantage of skeletal's router by rewriting all incoming requests to a common entry point. If that's an `index.php`, give Apache/httpd a directive like this in an `.htaccess` file:
 
@@ -54,13 +53,7 @@ Copy the following boilerplate into your entry point and verify that it's workin
 ?>
 ```
 
-The `Service` accepts route definitions as method calls named after the desired HTTP verb, and is given both a path and a closure to perform when matched. A `Request` will be provided to the closure as the first argument and a `Response` object by-reference as the second. Craft your response by calling `Response`'s vocabulary of chainable methods. The return value is not recognized.
-
-Direct `Service` to route the current request and echo the appropriate response with `serve()`.
-
-### Usage
-
-#### Getting information from the Request
+##### Getting information from the Request
 
 Access query string and post body parameters (`_GET` and `_POST`) with the `->get( $key )` and `->post( $key )` methods.
 
@@ -133,10 +126,10 @@ The `Response` argument is given as the second argument by-reference. By default
   
 ```
 
-### Routing
+#### Routing
 Call HTTP-verb methods on the `Service` to start a route declaration. Provide it a path to match and a closure to perform when it's accessed. The path will match case-insensitive and recognizes parameters in the form of `{token}` (e.g. `/post/{id}`), which will be available as query string parameters (`get()`) in the `Response`. The callback should have the form `function ( $request, &$response )`.
 
-### Dependency injection
+#### Dependency injection
 
 Assign arbitrary properties to the service and they will become available in the callback.
 
@@ -150,7 +143,7 @@ Assign arbitrary properties to the service and they will become available in the
   });
 ```
 
-### Accessing the Session
+#### Accessing the Session
 
 `Service`'s `$session` is available on instantiation and will alias PHP's `$_SESSION`.
 
@@ -161,8 +154,8 @@ Assign arbitrary properties to the service and they will become available in the
   });
 ```
 
-### Handling errors
+#### Handling errors
 
-Use the `Service`'s `onNotFound( $callback )` and `onException( $callback )` methods to define how error responses should be handled. They should have the same signature as normal requests and will be called on events as their names suggest: `onNotFound` when a request path doesn't match any defined route and `onException` when any `Exception` is caught during a callback (including `onNotFound`).
+Use the `Service`'s `onNotFound( $callback )` and `onException( $callback )` methods to define how error responses should be handled. They should have the same signature as normal requests (`onException()` will have the exception as a third argument) and will be called on events as their names suggest: `onNotFound` when a request path doesn't match any defined route and `onException` when any `Exception` is caught during a callback (including `onNotFound`).
 
 
