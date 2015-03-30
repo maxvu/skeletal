@@ -148,7 +148,7 @@ Assign arbitrary properties to the service and they will become available in the
 `Service`'s `$session` is available on instantiation and will alias PHP's `$_SESSION`.
 
 ```php
-  $demoLogin->router()->post( '/login', function ( $rq, &$rs ) {
+  $demoLogin->post( '/login', function ( $rq, &$rs ) {
     if ( ($user = login( $rq->post('user'), $rq->post('pass') ) != null ) )
         $this->session->user = $user;
   });
