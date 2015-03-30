@@ -5,6 +5,7 @@
   use Skeletal\Service\Service;
   use Skeletal\Session\CLISession;
   use Skeletal\HTTP\Request as Request;
+  use Skeletal\HTTP\Method as Method;
   
   class Database {
   
@@ -83,6 +84,46 @@
         $rq = $this->createRequest( $path, 'get' );
         $this->assert( $svc->route( $rq )->body() )->eq( $body );
       }
+    }
+    
+    public function doesRouteOtherVerbs () {
+      $svc = $this->createService();
+      $nop = function ( $rq, &$rs ) { $rs->text( $rq->method() ); };
+      $rq = $this->createRequest( '/', NULL );
+      $rq->requestPath = '/';
+      foreach ( Method::all() as $method )
+        $svc->{$method}( '/', $nop );
+        
+      foreach ( Method::all() as $method ) {
+         $rq->requestMethod = $method;
+        $this->assert( $svc->route( $rq )->body() )->eq( $method );
+      }
+    }
+    
+    public function notFoundCalled () {
+      $svc = $this->createService();
+      $svc->get( '/', function ( $rq, &$rs ) { $rs->body( '123' ); } );
+      $svc->onNotFound( function ( $rq, &$rs ) { $rs->body( 'NOTFOUND' ); } );
+      
+      // Wrong method
+      $this->assert(
+        $svc->route( $this->createRequest( '/', Method::$POST ) )->body()
+      )->eq( 'NOTFOUND' );
+      
+      $this->assert(
+        $svc->route( $this->createRequest( '/', Method::$PUT ) )->body()
+      )->eq( 'NOTFOUND' );
+      
+      // Wrong path
+      $this->assert(
+        $svc->route( $this->createRequest( '/dne', Method::$GET ) )->body()
+      )->eq( 'NOTFOUND' );
+      
+      // Right method, caps'ed path
+      $this->assert(
+        $svc->route( $this->createRequest( '/', Method::$GET ) )->body()
+      )->eq( '123' );
+      
     }
     
     public function canUseDependenciesInCallbackBody () {

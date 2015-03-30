@@ -54,6 +54,18 @@
       $this->assert( $rsp->someData )->eq( '10101' );
     }
     
+    public function codes () {
+      $rsp = new Response();
+      $this->assert( $rsp->redirect( '/' )->code() )->eq( 301 );
+      $this->assert( $rsp->badRequest()->code() )->eq( 400 );
+      $this->assert( $rsp->unauthorized()->code() )->eq( 401 );
+      $this->assert( $rsp->forbidden()->code() )->eq( 403 );
+      $this->assert( $rsp->notFound()->code() )->eq( 404 );
+      $this->assert( $rsp->notAcceptable()->code() )->eq( 406 );
+      $this->assert( $rsp->serverError()->code() )->eq( 500 );
+      $this->assert( $rsp->unavailable()->code() )->eq( 503 );
+    }
+    
   };
 
 ?>
