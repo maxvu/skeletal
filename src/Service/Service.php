@@ -107,7 +107,8 @@
           $request->requestMethod = Method::$GET;
           $response = $this->route( $request );
           $request->requestMethod = Method::$HEAD;
-          return $response->body('');
+          $contentLength = strlen( $response->body() );
+          return $response->body('')->length( $contentLength );
         }
       }
       
