@@ -43,7 +43,9 @@
       return 7 * $len + 5 * $score;
     }
     
-    public function matches ( Path $p ) {
+    public function matches ( $p ) {
+      if ( !is_a( $p, 'Path' ) )
+        $p = new Path( $p );
       $coeff = 1;
       $p = $p->getPath();
       if ( sizeof( $p ) !== sizeof( $this->path ) )
@@ -56,7 +58,9 @@
       return $coeff;
     }
     
-    public function apply ( Path $p ) {
+    public function apply ( $p ) {
+      if ( !is_a( $p, 'Path' ) )
+        $p = new Path( $p );
       if ( $this->matches( $p ) < 1 )
         return NULL;
       $p = $p->getPath();
