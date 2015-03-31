@@ -164,8 +164,8 @@
       );
     }
     
-    public function css ( $fileName ) {
-      return $this->body( $js )->header( 'Content-type', 'text/css' );
+    public function css ( $css ) {
+      return $this->body( $css )->header( 'Content-type', 'text/css' );
     }
     
     public function download ( $data, $name ) {
