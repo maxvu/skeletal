@@ -164,7 +164,7 @@
       );
     }
     
-    public static function css ( $fileName ) {
+    public function css ( $fileName ) {
       return $this->body( $js )->header( 'Content-type', 'text/css' );
     }
     
