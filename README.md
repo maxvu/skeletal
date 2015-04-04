@@ -159,3 +159,22 @@ Assign arbitrary properties to the service and they will become available in the
 Use the `Service`'s `onNotFound( $callback )` and `onException( $callback )` methods to define how error responses should be handled. They should have the same signature as normal requests (`onException()` will have the exception as a third argument) and will be called on events as their names suggest: `onNotFound` when a request path doesn't match any defined route and `onException` when any `Exception` is caught during a callback (including `onNotFound`).
 
 
+#### Templating and View Construction
+
+True to the "bare-bones" branding, skeletal does not enforce any templating conventions: you are free to choose a design that's as quick or as thorough as you'd like. Because it does, though, take responsibility for the construction of HTTP responses,  `include()` and related functions are broken. To compensate for that fact, `Response` makes available a function named `include()` which does two things:
+
+1. It wraps output buffering around the true PHP `include()` (returning the evaluated result) and,
+2. Performs all variable declarations within the scope of the `Response`
+
+The effect is that you may intuitively use PHP templates of any flavor, while also separating the concern of view variables to the `Response` itself.
+
+As an example, if `views/base.htm` is a full-page template, expecting a variable named `$pageContent` to contain an HTML partial that will occupy some space within it, then we may use `$response->include()` to use any other file to set `$pageContent`. Our route definition would look like this:
+
+```php
+<?php
+  $app->get( '/', function ( $rq, &$rs ) {
+    $rs->pageContent = $rs->include( __DIR__ . '/views/__somePartial.htm' );
+    $rs->html( __DIR__ . '/views/base.htm' );
+  });
+?>
+```

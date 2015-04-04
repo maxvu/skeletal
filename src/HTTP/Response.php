@@ -39,7 +39,7 @@
     
     public function append ( $str ) {
       if ( is_readable( $str ) )
-        $this->includeFile( $str );
+        $this->append( $this->includeFile( $str ) );
       else
         $this->body .= strval( $str );
       $this->length( strlen( $this->body ) );
@@ -50,13 +50,20 @@
       return $this->append( $str );
     }
     
-    private function includeFile ( $res ) {
+    public function includeFile ( $res ) {
       if ( !is_readable( $res ) )
         throw new \Exception( "Include $res inaccessible.");      
       ob_start();
       require( $res );
-      $this->append( ob_get_clean() );
-      return $this;
+      return ob_get_clean();
+    }
+    
+    public function __call ( $name, $args ) {
+      switch ( $name ) {
+        case 'include':
+          return call_user_func_array( array( $this, 'includeFile' ), $args );
+        break;
+      }
     }
     
     /*
