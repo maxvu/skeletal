@@ -38,16 +38,9 @@
     }
     
     public function append ( $str ) {
-      if ( is_readable( $str ) )
-        $this->append( $this->includeFile( $str ) );
-      else
-        $this->body .= strval( $str );
+      $this->body .= strval( $str );
       $this->length( strlen( $this->body ) );
       return $this;
-    }
-    
-    public function apply ( $str ) {
-      return $this->append( $str );
     }
     
     public function includeFile ( $res ) {

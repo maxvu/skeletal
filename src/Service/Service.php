@@ -37,13 +37,13 @@
     public function onNotFound ( $callback ) {
       if ( !is_callable( $callback ) )
         throw new \InvalidArgumentException( "onNotFound: not a valid callback" );
-      $this->onNotFound = $callback;
+      $this->onNotFound = $callback->bindTo( $this );
     }
     
     public function onException ( $callback ) {
       if ( !is_callable( $callback ) )
         throw new \InvalidArgumentException( "onException: not a valid callback" );
-      $this->onException = $callback;
+      $this->onException = $callback->bindTo( $this );
     }
     
     /*
