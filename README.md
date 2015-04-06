@@ -1,6 +1,6 @@
 ## skeletal
 
-A bare-bones PHP web framework. 
+A PHP router.
 
 #### Main features
 
