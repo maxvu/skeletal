@@ -178,5 +178,3 @@ Use `Service`'s `render()` method to bind variables to an `include()`'ed templat
     });
 ?>
 ```
-
-This style 
