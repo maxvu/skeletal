@@ -42,23 +42,7 @@
       $this->length( strlen( $this->body ) );
       return $this;
     }
-    
-    public function includeFile ( $res ) {
-      if ( !is_readable( $res ) )
-        throw new \Exception( "Include $res inaccessible.");      
-      ob_start();
-      require( $res );
-      return ob_get_clean();
-    }
-    
-    public function __call ( $name, $args ) {
-      switch ( $name ) {
-        case 'include':
-          return call_user_func_array( array( $this, 'includeFile' ), $args );
-        break;
-      }
-    }
-    
+
     /*
       Headers
     */

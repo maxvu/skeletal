@@ -20,14 +20,6 @@
       (new Response())->code( 'SLKDJF' );
     }
     
-    public function apply () {
-      $tmpfile = stream_get_meta_data( tmpfile() )['uri'];
-      file_put_contents( $tmpfile, "<?php echo 'HELLO '; ?>WORLD" );
-      $rsp = (new Response())->apply( $tmpfile );
-      $this->shouldOutput( '' );
-      $this->assert( $rsp->body() )->eq( 'HELLO WORLD' );
-    }
-    
     public function json () {
       
       $this->assert(

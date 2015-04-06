@@ -68,6 +68,20 @@
     }
     
     /*
+      Evaluate an include()'ed view without muddling up the scope.
+    */
+    
+    public function render ( $include, $scope ) {
+      $render = function () use ( $include, $scope ) {
+        extract( $scope );
+        ob_start();
+        require( $include );
+        return ob_get_clean();
+      };
+      return $render();
+    }
+    
+    /*
       Allow for get( $path, $callback ), post( $path, $callback ), etc.
     */
     

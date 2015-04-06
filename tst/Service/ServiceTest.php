@@ -173,6 +173,19 @@
       
     }
     
+    public function render () {
+      $svc = $this->createService();
+      
+      $tmpfile = stream_get_meta_data( tmpfile() )['uri'];
+      file_put_contents( $tmpfile, "HELLO <?php echo \$name; ?>" );
+      
+      $this->assert(
+        $svc->render( $tmpfile, array( 'name' => 'WORLD' ) )
+      )->eq( 'HELLO WORLD' );
+      
+      $this->assert( isset( $svc->name ) )->false();
+    }
+    
   };
 
 ?>
