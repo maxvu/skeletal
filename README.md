@@ -1,6 +1,6 @@
 ## skeletal
 
-A PHP router.
+A tiny PHP router.
 
 #### Main features
 
