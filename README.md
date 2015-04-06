@@ -104,8 +104,9 @@ The `Response` argument is given as the second argument by-reference. By default
   
   # BODY
   body( $str )               replace the body's content with $str
-  apply( $str )              append string to body
-  apply( $file )             include() file and append its (evaluated) contents to body
+  append( $str )             append string to body
+  include( $file )           perform PHP include() within `Response`'s scope,
+                             return evaluated output
   
   # HEADERS
   header( $name )            get the value of header $name
@@ -116,12 +117,12 @@ The `Response` argument is given as the second argument by-reference. By default
   type( $type, $charset )    set 'Content-Type' to '$type; charset=$charset'
   length( $nBytes )          set 'Content-Length' to $nBytes
   
-  html( $html )              set body to file or string $html and set 'Content-Type' to 'text/html'
-  json( $msg )               set body to encodable string or file and 'Content-Type' to 'application/json'
-  text( $txt )               set body to file or string $txt and 'Content-Type' to text/plain'
-  js( $js )                  set body to file or string $js and 'Content-Type' to 'application/javascript'
-  css( $css )                set body to file or string $css and 'Content-Type' to 'text/css'
-  download( $data, $name )   set body to file or string $data and 'Content-Disposition' to 'attachment; filename=$name'
+  html( $html )              set string $html and set 'Content-Type' to 'text/html'
+  json( $msg )               set body to encodable string and 'Content-Type' to 'application/json'
+  text( $txt )               set body to string $txt and 'Content-Type' to text/plain'
+  js( $js )                  set body to string $js and 'Content-Type' to 'application/javascript'
+  css( $css )                set body to string $css and 'Content-Type' to 'text/css'
+  download( $data, $name )   set body to string $data and 'Content-Disposition' to 'attachment; filename=$name'
     
   
 ```
@@ -161,20 +162,21 @@ Use the `Service`'s `onNotFound( $callback )` and `onException( $callback )` met
 
 #### Templating and View Construction
 
-True to the "bare-bones" branding, skeletal does not enforce any templating conventions: you are free to choose a design that's as quick or as thorough as you'd like. Because it does, though, take responsibility for the construction of HTTP responses,  `include()` and related functions are broken. To compensate for that fact, `Response` makes available a function named `include()` which does two things:
+Use `Service`'s `render()` method to bind variables to an `include()`'ed template. It will return the evaluated, output-buffered result and will prevent view variables from polluting the `Service` scope:
 
-1. It wraps output buffering around the true PHP `include()` (returning the evaluated result) and,
-2. Performs all variable declarations within the scope of the `Response`
+`view.htm`:
+```php
+<h1>Hello, <?php echo $name; ?>!</h1>
+```
 
-The effect is that you may intuitively use PHP templates of any flavor, while also separating the concern of view variables to the `Response` itself.
-
-As an example, if `views/base.htm` is a full-page template, expecting a variable named `$pageContent` to contain an HTML partial that will occupy some space within it, then we may use `$response->include()` to use any other file to set `$pageContent`. Our route definition would look like this:
-
+`app.php`:
 ```php
 <?php
-  $app->get( '/', function ( $rq, &$rs ) {
-    $rs->pageContent = $rs->include( __DIR__ . '/views/__somePartial.htm' );
-    $rs->html( __DIR__ . '/views/base.htm' );
-  });
+    $app->get( '/', function ( $rq, &$rs ) {
+        $page = $this->render( 'view.htm', array( 'name' => 'World' ) );
+        $rs->html( $page );
+    });
 ?>
 ```
+
+This style 
