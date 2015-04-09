@@ -7,6 +7,7 @@ A tiny PHP router.
 * A router with basic pattern matching
 * Easy, abbreviated Request and Response classes
 * Basic error handling
+* Dead-simple templating
 
 #### Getting started
 
@@ -45,8 +46,8 @@ Copy the following boilerplate into your entry point and verify that it's workin
   
   $demoService = new \Skeletal\Service\Service();
   
-  $demoService->get( '/', function ( $rq, &$rs ) {
-    $rs->body('<h1>HELLO WORLD</h1>');
+  $demoService->get( '/', function ( $service, $request ) {
+    return (new Response())->body('<h1>HELLO WORLD</h1>');
   });
   
   $demoService->serve();
@@ -55,26 +56,27 @@ Copy the following boilerplate into your entry point and verify that it's workin
 
 ##### Getting information from the Request
 
-Access query string and post body parameters (`_GET` and `_POST`) with the `->get( $key )` and `->post( $key )` methods.
+Access query string and post body parameters (`_GET` and `_POST`) with the `get( $key )` and `post( $key )` methods.
 
 ```php
-  $demoBlog->get( '/search', function ( $rq, &$rs ) {
-    $searchResult = $mySearchEngine->search( $rq->get('q') );
-    $rq->body( sizeof( $searchResult ) . ' records found' );
+  $demoSearch->get( '/search', function ( $service, $request ) {
+    $searchResult = $service->mySearchEngine->search( $request->get('q') );
+    return (new Response())->body( sizeof( $searchResult ) . ' records found' );
   });
 ```
 
 ```php
-  $demoMail->post( '/message', function ( $rq, &$rs ) {
-    $to = $rq->post('to');
-    $msg = $rq->post('msg');
+  $demoMail->post( '/message', function ( $service, $request ) {
+    $to = $rq->post( 'to' );
+    $msg = $rq->post( 'msg' );
     $mailer->send( $to, $msg );
+    return (new Repsonse())->text( 'OK' );
   });
 ```
 
 Methods to access the `Request`:
 
-```
+```php
   path()              the request path 
   get( $key )         access query string parameter (or route matcher) $key
   post( $key )        access post parameter $key 
@@ -88,7 +90,7 @@ Methods to access the `Request`:
 
 #### Manipulating the Response
 
-The `Response` argument is given as the second argument by-reference. By default, it will be sent as a `text/html` document with an empty body and code `200 OK`. Modify the body, headers and response code using any of its chainable methods:
+Callbacks will expect to receive a `Skeletal\HTTP\Response` object as a return value. Instantiated, it will be sent as a `text/html` document with an empty body and code `200 OK`. Modify the body, headers and response code using any of its chainable methods:
 
 ```
   # CODES
@@ -128,19 +130,19 @@ The `Response` argument is given as the second argument by-reference. By default
 ```
 
 #### Routing
-Call HTTP-verb methods on the `Service` to start a route declaration. Provide it a path to match and a closure to perform when it's accessed. The path will match case-insensitive and recognizes parameters in the form of `{token}` (e.g. `/post/{id}`), which will be available as query string parameters (`get()`) in the `Response`. The callback should have the form `function ( $request, &$response )`.
+Call HTTP-verb methods on the `Service` to start a route declaration. Provide it a path to match and a closure to perform when it's accessed. The path will match case-insensitive and recognizes parameters in the form of `{token}` (e.g. `/post/{id}`), which will be available as query string parameters (`get()`) in the `Request`. The callback should have the form `function ( $service, $request )`, and may be either a true `Closure` object or a string-form static method.
 
 #### Dependency injection
 
-Assign arbitrary properties to the service and they will become available in the callback.
+Assign arbitrary properties to the service and they will become available in the callback through the `$service` argument:
 
 ```php
   $forum = new Skeletal\Service();
   $forum->db = new Database();
   
-  $demo->get( '/post/{id}', function ( $rq, &$rs ) {
-    $post = this->db->getPost( $rq->get('id') );
-    $rs->apply( 'viewpost.php' );
+  $demo->get( '/post/{id}', function ( $forum, $request ) {
+    $post = $forum->db->getPost( $rq->get('id') );
+    return (new Response())->json( $post );
   });
 ```
 
@@ -149,9 +151,10 @@ Assign arbitrary properties to the service and they will become available in the
 `Service`'s `$session` is available on instantiation and will alias PHP's `$_SESSION`.
 
 ```php
-  $demoLogin->post( '/login', function ( $rq, &$rs ) {
-    if ( ($user = login( $rq->post('user'), $rq->post('pass') ) != null ) )
+  $demoLogin->post( '/login', function ( $service, $request ) {
+    if ( ($user = $service->login( $rq->post('user'), $rq->post('pass') ) != null ) )
         $this->session->user = $user;
+    return (new Response())->body('Logged in!');
   });
 ```
 
