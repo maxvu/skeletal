@@ -11,7 +11,7 @@
       $route = new Route( '/one/two/three', 'POST', function () {} );
       $this->assert( (string) $route )->eq( '/one/two/three' );
       $this->assert( $route->getMethod() )->eq( 'POST' );
-      $this->assert( is_callable( $route->getClosure() ) );
+      $this->assert( is_callable( $route->getHandler() ) );
     }
     
   };

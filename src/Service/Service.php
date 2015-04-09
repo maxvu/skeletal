@@ -21,12 +21,11 @@
       $this->router = new \Skeletal\Router\Router();
       $this->session = new Session();
       
-      $this->onNotFound = function ( $req, &$resp ) {
-        $resp->badRequest()->text( '404 - Not Found' )->code(404);
+      $this->onNotFound = function ( $svc, $req ) {
+        return (new Response())->text( '404 - Not Found' )->code(404);
       };
-      $this->onException = function ( $req, &$resp, $ex ) {
-        print_r( $e );
-        $resp->serverError()->text( '500 - Server Error' )->code(500);
+      $this->onException = function ( $svc, $req, $ex ) {
+        return (new Response())->serverError()->text( '500 - Server Error' );
       };
     }
     
@@ -47,7 +46,7 @@
     }
     
     /*
-      Get and set arbitrary attributes on the Service to give Routes' closures
+      Get and set arbitrary attributes on the Service to give Routes' handlers
       access to dependencies.
     */
     
@@ -75,7 +74,9 @@
       $render = function () use ( $include, $scope ) {
         extract( $scope );
         ob_start();
-        require( $include );
+        if ( !@require( $include ) ) {
+          throw new \Exception( "Include $include inaccessible." );
+        }
         return ob_get_clean();
       };
       return $render();
@@ -111,7 +112,7 @@
           $route->apply( $request->requestPath ),
           $request->queryString
         );
-        return $this->invokeCallback( $request, $route->getClosure() );
+        return $this->invokeCallback( $request, $route->getHandler() );
       }
       
       // HEAD wasn't explicitly defined, but route to matching GET, strip body.
@@ -140,14 +141,11 @@
     */
     
     private function invokeCallback ( Request $request, $handler ) {
-      $response = new Response();
-      $handler = $handler->bindTo( $this );
       try {
-        call_user_func_array( $handler, array( $request, &$response ) );
+        return call_user_func_array( $handler, array( $this, $request ) );
       } catch ( \Exception $ex ) {
-        call_user_func_array( $this->onException, [ $request, &$response, $ex ] );
+        return call_user_func_array( $this->onException, array( $this, $request, $ex ) );
       }
-      return $response;
     }
   
   };

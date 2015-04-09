@@ -15,10 +15,10 @@
       return $this->routes;
     }
     
-    public function addRoute ( $path, $method, $closure ) {
-      if ( !is_callable( $closure ) )
+    public function addRoute ( $path, $method, $handler ) {
+      if ( !is_callable( $handler ) )
         throw new \Exception( 'Given handler is not a Callable.' );
-      $this->routes[] = new Route( $path, strtoupper( $method ), $closure );
+      $this->routes[] = new Route( $path, strtoupper( $method ), $handler );
     }
     
     public function findRoute ( $path, $method ) {

@@ -7,9 +7,9 @@
     protected $strPath;
     protected $path;
     protected $method;
-    protected $closure;
+    protected $handler;
     
-    public function __construct ( $path, $method, callable $closure ) {
+    public function __construct ( $path, $method, callable $handler ) {
       $path = is_a( 'Path', $path ) ? $path : new Path( $path );
       $this->strPath = (string) $path;
       $this->path = array();
@@ -20,7 +20,7 @@
           $this->path[] = RouteToken::exactMatch( $token );
       }
       $this->method = $method;
-      $this->closure = $closure;
+      $this->handler = $handler;
     }
     
     public function getPath () {
@@ -31,8 +31,8 @@
       return $this->method;
     }
     
-    public function getClosure () {
-      return $this->closure;
+    public function getHandler () {
+      return $this->handler;
     }
     
     public function getPriority () {

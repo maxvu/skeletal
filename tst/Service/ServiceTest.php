@@ -4,8 +4,9 @@
 
   use Skeletal\Service\Service;
   use Skeletal\Session\CLISession;
-  use Skeletal\HTTP\Request as Request;
-  use Skeletal\HTTP\Method as Method;
+  use Skeletal\HTTP\Request;
+  use Skeletal\HTTP\Response;
+  use Skeletal\HTTP\Method;
   
   class Database {
   
@@ -28,11 +29,11 @@
       $cliConstructor = function () {
         $this->router = new \Skeletal\Router\Router();
         $this->session = new CLISession();
-        $this->onNotFound = function ( $rq, $rs ) {
-          $rs->code(404)->text('notfound');
+        $this->onNotFound = function ( $svc, $rq ) {
+          return (new Reponse())->code(404)->text('notfound');
         };
-        $this->onException = function ( $rq, $rs ) {
-          $rs->code(500)->text('error');
+        $this->onException = function ( $svc, $rq ) {
+          return (new Response())->code(500)->text('error');
         };
       };
       
@@ -60,14 +61,6 @@
       
       $svc = $this->createService();
       
-      $svc->get( '/', function ( $rq, $rs ) { $rs->text( 'index' ); });
-      $svc->get( '/one', function ( $rq, $rs ) { $rs->text( 'one' ); });
-      $svc->get( '/{one}', function ( $rq, $rs ) { $rs->text( 'X' ); });
-      $svc->get( '/one/two', function ( $rq, $rs ) { $rs->text( 'Y' ); });
-      $svc->get( '/one/{two}', function ( $rq, $rs ) { $rs->text( 'Z' ); });
-      $svc->get( '/{one}/{two}', function ( $rq, $rs ) { $rs->text( 'ZZZ' ); });
-      $svc->get( '/exception', function ( $rq, $rs ) { throw new \Exception( '!!!' ); });
-      
       $cases = [
         '/' => 'index',
         '//' => 'index',
@@ -81,14 +74,23 @@
       ];
       
       foreach ( $cases as $path => $body ) {
+        $svc->get( $path, function ( $svc, $rq ) use ( $body ) {
+          return (new Response())->text( $body );
+        });
         $rq = $this->createRequest( $path, 'get' );
         $this->assert( $svc->route( $rq )->body() )->eq( $body );
       }
+      
+      $svc->get( '/exception', function ( $svc, $rq ) {
+        throw new \Exception( '!!!' );
+      });
     }
     
     public function doesRouteOtherVerbs () {
       $svc = $this->createService();
-      $nop = function ( $rq, &$rs ) { $rs->text( $rq->method() ); };
+      $nop = function ( $svc, $rq ) {
+        return (new Response())->text( $rq->method() );
+      };
       $rq = $this->createRequest( '/', NULL );
       $rq->requestPath = '/';
       foreach ( Method::all() as $method )
@@ -102,8 +104,12 @@
     
     public function notFoundCalled () {
       $svc = $this->createService();
-      $svc->get( '/', function ( $rq, &$rs ) { $rs->body( '123' ); } );
-      $svc->onNotFound( function ( $rq, &$rs ) { $rs->body( 'NOTFOUND' ); } );
+      $svc->get( '/', function ( $svc, $rq ) {
+        return (new Response())->body( '123' ); }
+      );
+      $svc->onNotFound( function ( $svc, $rq ) {
+        return (new Response())->body( 'NOTFOUND' );
+      } );
       
       // Wrong method
       $this->assert(
@@ -123,7 +129,6 @@
       $this->assert(
         $svc->route( $this->createRequest( '/', Method::$GET ) )->body()
       )->eq( '123' );
-      
     }
     
     public function canUseDependenciesInCallbackBody () {
@@ -131,13 +136,13 @@
       $svc->db = new Database();
       $svc->db->ABC = 123;
       
-      $svc->get( '/document/{id}', function ( $rq, $rs ) {
-        $record = $this->db->{$rq->get('id')};
+      $svc->get( '/document/{id}', function ( $svc, $rq ) {
+        $record = $svc->db->{$rq->get('id')};
         echo $rq->get('id') . "\n";
         if ( $record === NULL )
-          $rs->code(404)->text( 'notfound' );
+          return (new Response())->code(404)->text( 'notfound' );
         else
-          $rs->body( $record );
+          return (new Response())->body( $record );
       });
       
       $this->assert(
@@ -152,8 +157,8 @@
     public function headRequestsRoutedAndSized () {
       $svc = $this->createService();
       
-      $svc->get( '/msg', function ( $rq, $rs ) {
-        $rs->body( 'HELLO WORLD' );
+      $svc->get( '/msg', function ( $svc, $rq ) {
+        return (new Response())->body( 'HELLO WORLD' );
       });
       
       $getResponse = $svc->route( $this->createRequest( '/msg', 'GET' ) );

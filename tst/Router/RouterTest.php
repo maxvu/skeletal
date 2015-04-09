@@ -35,7 +35,7 @@
       ];
       
       foreach ( $cases as $path => $expected ) {
-        $result = call_user_func( $r->findRoute( $path, 'GET' )->getClosure() );
+        $result = call_user_func( $r->findRoute( $path, 'GET' )->getHandler() );
         $this->assert( $result )->eq( $expected );
       }
       
@@ -46,10 +46,10 @@
       
       // Case doesn't matter
       $this->assert(
-        call_user_func( $r->findRoute( '/one', 'gEt' )->getClosure() )
+        call_user_func( $r->findRoute( '/one', 'gEt' )->getHandler() )
       )->eq( 'B' );
       $this->assert(
-        call_user_func( $r->findRoute( '/oNE/tWO', 'get' )->getClosure() )
+        call_user_func( $r->findRoute( '/oNE/tWO', 'get' )->getHandler() )
       )->eq( 'C' );
       
     }
