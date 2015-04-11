@@ -94,7 +94,7 @@
       $rq = $this->createRequest( '/', NULL );
       $rq->requestPath = '/';
       foreach ( Method::all() as $method )
-        $svc->{$method}( '/', $nop );
+        $svc->{strtolower($method)}( '/', $nop );
         
       foreach ( Method::all() as $method ) {
          $rq->requestMethod = $method;

@@ -83,17 +83,50 @@
     }
     
     /*
-      Allow for get( $path, $callback ), post( $path, $callback ), etc.
+      HTTP verbs
     */
     
-    public function __call ( $method, $args ) {
-      $is_http_method = in_array( strtoupper( $method ), Method::ALL() );
-      if ( $is_http_method && sizeof( $args ) === 2 )
-        $this->router->addRoute(
-          new Path( $args[0] ), strtoupper( $method ), $args[1]
-        );
-      else
-        throw new \InvalidArgumentException( "No method $method" );
+    public function get ( $path, $handler ) {
+      $this->addRoute( 'GET', $path, $handler );
+    }
+
+    public function post ( $path, $handler ) {
+      $this->addRoute( 'POST', $path, $handler );
+    }
+
+    public function head ( $path, $handler ) {
+      $this->addRoute( 'HEAD', $path, $handler );
+    }
+    
+    public function delete ( $path, $handler ) {
+      $this->addRoute( 'DELETE', $path, $handler );
+    }
+    
+    public function put ( $path, $handler ) {
+      $this->addRoute( 'PUT', $path, $handler );
+    }
+    
+    public function options ( $path, $handler ) {
+      $this->addRoute( 'OPTIONS', $path, $handler );
+    }
+    
+    public function connect ( $path, $handler ) {
+      $this->addRoute( 'CONNECT', $path, $handler );
+    }
+    
+    /*
+      Accept as a handler either a closure with argument ( $service, $request )
+      or a string in the form 'ControllerClass#ControllerMethod'.
+    */
+    
+    private function addRoute ( $method, $path, $handler ) {
+      if ( is_string( $handler ) && preg_match( "/^.+\#.+$/", $handler ) == 1 )
+        $handler = function ( $service, $request ) use ( $handler ) {
+          list($controller, $method) = explode( '#', $handler );
+          $controller = new $controller( $service );
+          return $controller->{$method}( $request );
+        };
+      $this->router->addRoute( new Path( $path ), $method, $handler );
     }
     
     /*
