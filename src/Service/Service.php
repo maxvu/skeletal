@@ -172,7 +172,8 @@
       try {
         return call_user_func_array( $handler, array( $this, $request ) );
       } catch ( \Exception $ex ) {
-        return call_user_func_array( $this->onException, array( $this, $request, $ex ) );
+        $this->exception = $ex;
+        return call_user_func_array( $this->onException, array( $this, $request ) );
       }
     }
   
