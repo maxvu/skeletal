@@ -34,15 +34,17 @@
     */
     
     public function onNotFound ( $callback ) {
-      if ( !is_callable( $callback ) )
-        throw new \InvalidArgumentException( "onNotFound: not a valid callback" );
-      $this->onNotFound = $callback->bindTo( $this );
+      $callback = $this->vetHandler( $callback );
+      if ( $callback === NULL )
+        throw new \InvalidArgumentException( "Invalid callback for onNotFound." );
+      $this->onNotFound = $callback;
     }
     
     public function onException ( $callback ) {
-      if ( !is_callable( $callback ) )
-        throw new \InvalidArgumentException( "onException: not a valid callback" );
-      $this->onException = $callback->bindTo( $this );
+      $callback = $this->vetHandler( $callback );
+      if ( $callback === NULL )
+        throw new \InvalidArgumentException( "Invalid callback for onException." );
+      $this->onException = $callback;
     }
     
     /*
@@ -64,22 +66,6 @@
     
     public function __unset ( $property ) {
       unset( $this->{$property} );
-    }
-    
-    /*
-      Evaluate an include()'ed view without muddling up the scope.
-    */
-    
-    public function render ( $include, $scope ) {
-      $render = function () use ( $include, $scope ) {
-        extract( $scope );
-        ob_start();
-        if ( !@require( $include ) ) {
-          throw new \Exception( "Include $include inaccessible." );
-        }
-        return ob_get_clean();
-      };
-      return $render();
     }
     
     /*
@@ -114,19 +100,28 @@
       $this->addRoute( 'CONNECT', $path, $handler );
     }
     
+    private function addRoute ( $method, $path, $handler ) {
+      $handler = $this->vetHandler( $handler );
+      if ( $handler === NULL )
+        throw new \InvalidArgumentException( "Invalid handler for route $path." );
+      $this->router->addRoute( new Path( $path ), $method, $handler );
+    }
+    
     /*
       Accept as a handler either a closure with argument ( $service, $request )
       or a string in the form 'ControllerClass#ControllerMethod'.
     */
     
-    private function addRoute ( $method, $path, $handler ) {
-      if ( is_string( $handler ) && preg_match( "/^.+\#.+$/", $handler ) == 1 )
-        $handler = function ( $service, $request ) use ( $handler ) {
+    private function vetHandler ( $handler ) {
+      if ( is_callable( $handler ) )
+        return $handler;
+      else if ( is_string( $handler ) && preg_match( "/^.+\#.+$/", $handler ) == 1 )
+        return function ( $service, $request ) use ( $handler ) {
           list($controller, $method) = explode( '#', $handler );
           $controller = new $controller( $service );
           return $controller->{$method}( $request );
         };
-      $this->router->addRoute( new Path( $path ), $method, $handler );
+      return NULL;
     }
     
     /*
