@@ -31,9 +31,9 @@ RewriteRule ^(.*)$ index.php [QSA,L]
 
 On nginx, use a directive like this instead:
 ```
-location / {
-    try_files $uri $uri/ /index.php?$args;
-}
+    location / {
+            rewrite ^ /index.php last;
+    }
 ```
 
 #### A basic service example
@@ -47,7 +47,7 @@ Copy the following boilerplate into your entry point and verify that it's workin
   $demoService = new \Skeletal\Service\Service();
   
   $demoService->get( '/', function ( $service, $request ) {
-    return (new Response())->body('<h1>HELLO WORLD</h1>');
+    return (new Response())->html('<h1>HELLO WORLD</h1>');
   });
   
   $demoService->serve();
@@ -160,24 +160,4 @@ Assign arbitrary properties to the service and they will become available in the
 
 #### Handling errors
 
-Use the `Service`'s `onNotFound( $callback )` and `onException( $callback )` methods to define how error responses should be handled. They should have the same signature as normal requests (`onException()` will have the exception as a third argument) and will be called on events as their names suggest: `onNotFound` when a request path doesn't match any defined route and `onException` when any `Exception` is caught during a callback (including `onNotFound`).
-
-
-#### Templating and View Construction
-
-Use `Service`'s `render()` method to bind variables to an `include()`'ed template. It will return the evaluated, output-buffered result and will prevent view variables from polluting the `Service` scope:
-
-`view.htm`:
-```php
-<h1>Hello, <?php echo $name; ?>!</h1>
-```
-
-`app.php`:
-```php
-<?php
-    $app->get( '/', function ( $rq, &$rs ) {
-        $page = $this->render( 'view.htm', array( 'name' => 'World' ) );
-        $rs->html( $page );
-    });
-?>
-```
+Use the `Service`'s `onNotFound( $callback )` and `onException( $callback )` methods to define how error responses should be handled. They should have the same signature as normal requests (`onException()` will have the exception available as `$service->exception`) and will be called on events as their names suggest: `onNotFound` when a request path doesn't match any defined route and `onException` when any `Exception` is caught during a callback (including `onNotFound`).
