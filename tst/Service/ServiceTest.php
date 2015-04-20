@@ -138,7 +138,7 @@
       
       $svc->get( '/document/{id}', function ( $svc, $rq ) {
         $record = $svc->db->{$rq->get('id')};
-        echo $rq->get('id') . "\n";
+        echo $rq->get('id') , "\n";
         if ( $record === NULL )
           return (new Response())->code(404)->text( 'notfound' );
         else
